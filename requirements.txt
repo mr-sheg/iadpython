@@ -1,4 +1,23 @@
+-e .
+#
+# Test
+pytest
+#
+# Testing notebooks
 numpy
 matplotlib
 scipy
-pytest
+nbconvert
+nbformat
+#
+# Lint
+rstcheck
+pylint
+pydocstyle
+#
+# Docs
+notebook
+#
+# Release
+check-manifest
+pyroma
