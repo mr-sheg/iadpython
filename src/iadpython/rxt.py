@@ -26,29 +26,31 @@ Example::
 """
 
 import re
+
 import numpy as np
+
 import iadpython
 
-__all__ = ('read_rxt', 'read_and_remove_notation')
+__all__ = ("read_rxt", "read_and_remove_notation")
 
 
 def read_and_remove_notation(filename):
     """Read file and remove all whitespace and comments."""
-    s = ''
+    s = ""
     with open(filename, encoding="utf-8") as f:
         for line in f:
-            line = re.sub(r'#.*', '', line)
-            line = re.sub(r'\s', ' ', line)
-            line = re.sub(r',', ' ', line)
+            line = re.sub(r"#.*", "", line)
+            line = re.sub(r"\s", " ", line)
+            line = re.sub(r",", " ", line)
             s += line
 
-    if len(re.findall('IAD1', s)) == 0:
+    if len(re.findall("IAD1", s)) == 0:
         raise ValueError("Not an .rxt file. (Does not start with IAD1)")
 
-    s = re.sub(r'IAD1', '', s)
-    s = re.sub(r'\s+', ' ', s)
-    s = re.sub(r'^\s+', '', s)
-    s = re.sub(r'\s+$', '', s)
+    s = re.sub(r"IAD1", "", s)
+    s = re.sub(r"\s+", " ", s)
+    s = re.sub(r"^\s+", "", s)
+    s = re.sub(r"\s+$", "", s)
     return s
 
 
@@ -62,7 +64,7 @@ def read_rxt(filename):
         Experiment object
     """
     s = read_and_remove_notation(filename)
-    x = np.array([float(value) for value in s.split(' ')])
+    x = np.array([float(value) for value in s.split(" ")])
 
     sample = iadpython.Sample(a=None, b=None, g=None)
     sample.n = x[0]
@@ -85,7 +87,7 @@ def read_rxt(filename):
     exp.d_beam = x[4]
     exp.rstd_r = x[5]
     exp.num_spheres = x[6]
-    exp.method = 'substitution'
+    exp.method = "substitution"
 
     if exp.num_spheres > 0:
         exp.r_sphere = iadpython.Sphere(x[7], x[8], x[9], x[10], 0, x[11])
@@ -107,7 +109,6 @@ def read_rxt(filename):
 
     count_per_line = 1
     for i in range(18, len(x)):
-
         if x[i] > 1:
             exp.lambda0 = np.append(exp.lambda0, x[i])
             continue

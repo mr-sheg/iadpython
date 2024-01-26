@@ -6,20 +6,24 @@
 # pylint: disable=too-many-return-statements
 # pylint: disable=global-statement
 
+import argparse
 import os
 import sys
-from enum import Enum
-import argparse
 import time
+from enum import Enum
+
 import numpy as np
+
 import iadpython
 
 # Global COUNTER to mimic static behavior in C
 COUNTER = 0
 ANY_ERROR = False
 
+
 class SlidePosition(Enum):
     """All the combinations of glass and sample."""
+
     NO_SLIDES = 0
     ONE_SLIDE_ON_TOP = 1
     TWO_IDENTICAL_SLIDES = 2
@@ -27,14 +31,18 @@ class SlidePosition(Enum):
     ONE_SLIDE_NEAR_SPHERE = 4
     ONE_SLIDE_NOT_NEAR_SPHERE = 5
 
+
 class LightCondition(Enum):
     """Options for interpreting illumination."""
+
     MR_IS_ONLY_RD = 1
     MT_IS_ONLY_TD = 2
     NO_UNSCATTERED_LIGHT = 3
 
+
 class InputError(Enum):
     """Possible input errors."""
+
     NO_ERROR = 0
     TOO_MANY_ITERATIONS = 1
     MR_TOO_BIG = 2
@@ -44,6 +52,7 @@ class InputError(Enum):
     MU_TOO_BIG = 6
     MU_TOO_SMALL = 7
     TOO_MUCH_LIGHT = 8
+
 
 def print_error_legend():
     """Print error explanation and quit."""
@@ -60,27 +69,29 @@ def print_error_legend():
     print("   +  ==> Did not converge\n")
     sys.exit(0)
 
+
 def what_char(err):
     """Return appropriate character for analysis of current datapoint."""
     if err == InputError.NO_ERROR:
-        return '*'
+        return "*"
     if err == InputError.TOO_MANY_ITERATIONS:
-        return '+'
+        return "+"
     if err == InputError.MR_TOO_BIG:
-        return 'R'
+        return "R"
     if err == InputError.MR_TOO_SMALL:
-        return 'r'
+        return "r"
     if err == InputError.MT_TOO_BIG:
-        return 'T'
+        return "T"
     if err == InputError.MT_TOO_SMALL:
-        return 't'
+        return "t"
     if err == InputError.MU_TOO_BIG:
-        return 'U'
+        return "U"
     if err == InputError.MU_TOO_SMALL:
-        return 'u'
+        return "u"
     if err == InputError.TOO_MUCH_LIGHT:
-        return '!'
-    return '?'
+        return "!"
+    return "?"
+
 
 def print_dot(start_time, err, points, final, verbosity):
     """Print a character for each datapoint during analysis."""
@@ -95,17 +106,17 @@ def print_dot(start_time, err, points, final, verbosity):
         return
 
     if final == 99:
-        print(what_char(err), end='')
+        print(what_char(err), end="")
     else:
         COUNTER -= 1
-        print(f"{final % 10}\b", end='')
+        print(f"{final % 10}\b", end="")
 
     if final == 99:
         if COUNTER % 50 == 0:
             rate = (time.time() - start_time) / points
             print(f"  {points} done ({rate:.2f} s/pt)")
         elif COUNTER % 10 == 0:
-            print(" ", end='')
+            print(" ", end="")
 
     sys.stdout.flush()
 
@@ -120,6 +131,7 @@ def validator_01(value):
         raise argparse.ArgumentTypeError(f"Commandline: {value} is not between 0 and 1")
     return fvalue
 
+
 def validator_11(value):
     """Is value between -1 and 1."""
     try:
@@ -129,6 +141,7 @@ def validator_11(value):
     if not -1 <= fvalue <= 1:
         raise argparse.ArgumentTypeError(f"Commandline: {value} is not between 0 and 1")
     return fvalue
+
 
 def validator_positive(value):
     """Is value non-negative."""
@@ -140,51 +153,179 @@ def validator_positive(value):
         raise argparse.ArgumentTypeError(f"{value} is not positive")
     return fvalue
 
+
 # Argument specifications
 arg_specs = [
-    {"flags": ["-1"], "dest": "r_sphere", "metavar": ("SPHERE_D", "SAMPLE_D", "ENTRANCE_D", "DETECTOR_D", "WALL_R"),
-     "nargs": 5, "type": float, "help": "Reflection sphere parameters"},
-    {"flags": ["-2"], "dest": "t_sphere", "metavar": ("SPHERE_D", "SAMPLE_D", "ENTRANCE_D", "DETECTOR_D", "WALL_R"),
-     "nargs": 5, "type": float, "help": "Transmission sphere parameters"},
-    {"flags": ["-a", "--albedo"], "dest": "albedo", "type": validator_01, "help": "Use this albedo"},
-    {"flags": ["-A", "--mua"], "dest": "mua", "type": validator_positive, "help": "Use this absorption coefficient"},
-    {"flags": ["-b"], "dest": "b", "type": validator_positive, "help": "Use this optical thickness"},
-    {"flags": ["-B", "--diameter"], "dest": "diameter", "type": validator_positive, "help": "Beam diameter"},
-    {"flags": ["-c"], "dest": "f_r", "type": validator_01, "help": "Fraction of unscattered refl in MR"},
-    {"flags": ["-C"], "dest": "f_t", "type": validator_01, "help": "Fraction of unscattered trans in MT"},
-    {"flags": ["-d"], "dest": "thickness", "type": validator_positive, "help": "Thickness of sample"},
-    {"flags": ["-D"], "dest": "slide_thickness", "type": validator_positive, "help": "Thickness of slide"},
-    {"flags": ["-e"], "dest": "error", "type": float, "default": 0.0001, "help": "Error tolerance (default 0.0001)"},
-    {"flags": ["-E"], "dest": "E", "type": validator_positive, "help": "Optical depth (=mua*D) for slides"},
-    {"flags": ["-f"], "dest": "f_wall", "type": validator_01, "help": "Fraction 0.0-1.0 of light to hit sphere wall first"},
-    {"flags": ["-F", "--mus"], "dest": "mus", "type": validator_positive, "help": "Use this scattering coefficient"},
+    {
+        "flags": ["-1"],
+        "dest": "r_sphere",
+        "metavar": ("SPHERE_D", "SAMPLE_D", "ENTRANCE_D", "DETECTOR_D", "WALL_R"),
+        "nargs": 5,
+        "type": float,
+        "help": "Reflection sphere parameters",
+    },
+    {
+        "flags": ["-2"],
+        "dest": "t_sphere",
+        "metavar": ("SPHERE_D", "SAMPLE_D", "ENTRANCE_D", "DETECTOR_D", "WALL_R"),
+        "nargs": 5,
+        "type": float,
+        "help": "Transmission sphere parameters",
+    },
+    {
+        "flags": ["-a", "--albedo"],
+        "dest": "albedo",
+        "type": validator_01,
+        "help": "Use this albedo",
+    },
+    {
+        "flags": ["-A", "--mua"],
+        "dest": "mua",
+        "type": validator_positive,
+        "help": "Use this absorption coefficient",
+    },
+    {
+        "flags": ["-b"],
+        "dest": "b",
+        "type": validator_positive,
+        "help": "Use this optical thickness",
+    },
+    {
+        "flags": ["-B", "--diameter"],
+        "dest": "diameter",
+        "type": validator_positive,
+        "help": "Beam diameter",
+    },
+    {
+        "flags": ["-c"],
+        "dest": "f_r",
+        "type": validator_01,
+        "help": "Fraction of unscattered refl in MR",
+    },
+    {
+        "flags": ["-C"],
+        "dest": "f_t",
+        "type": validator_01,
+        "help": "Fraction of unscattered trans in MT",
+    },
+    {
+        "flags": ["-d"],
+        "dest": "thickness",
+        "type": validator_positive,
+        "help": "Thickness of sample",
+    },
+    {
+        "flags": ["-D"],
+        "dest": "slide_thickness",
+        "type": validator_positive,
+        "help": "Thickness of slide",
+    },
+    {
+        "flags": ["-e"],
+        "dest": "error",
+        "type": float,
+        "default": 0.0001,
+        "help": "Error tolerance (default 0.0001)",
+    },
+    {
+        "flags": ["-E"],
+        "dest": "E",
+        "type": validator_positive,
+        "help": "Optical depth (=mua*D) for slides",
+    },
+    {
+        "flags": ["-f"],
+        "dest": "f_wall",
+        "type": validator_01,
+        "help": "Fraction 0.0-1.0 of light to hit sphere wall first",
+    },
+    {
+        "flags": ["-F", "--mus"],
+        "dest": "mus",
+        "type": validator_positive,
+        "help": "Use this scattering coefficient",
+    },
     {"flags": ["-g"], "type": validator_11, "help": "Scattering anisotropy"},
-    {"flags": ["-G"], "type": str, "choices": ['0', '2', 't', 'b', 'n', 'f'], "help": "Type of boundary "},
+    {
+        "flags": ["-G"],
+        "type": str,
+        "choices": ["0", "2", "t", "b", "n", "f"],
+        "help": "Type of boundary ",
+    },
     {"flags": ["-i"], "type": float, "help": "Light incident at this angle in degrees"},
     {"flags": ["-M"], "type": int, "help": "Number of Monte Carlo iterations"},
-    {"flags": ["-n", "--nslab"], "dest": "nslab", "type": validator_positive, "help": "Index of refraction of slab"},
-    {"flags": ["-N", "--nslide"], "dest": "nslide", "type": validator_positive, "help": "Index of refraction of slides"},
+    {
+        "flags": ["-n", "--nslab"],
+        "dest": "nslab",
+        "type": validator_positive,
+        "help": "Index of refraction of slab",
+    },
+    {
+        "flags": ["-N", "--nslide"],
+        "dest": "nslide",
+        "type": validator_positive,
+        "help": "Index of refraction of slides",
+    },
     {"flags": ["-o"], "dest": "out_fname", "type": str, "help": "Filename for output"},
     {"flags": ["-p"], "type": int, "help": "# of Monte Carlo photons (default 100000)"},
-    {"flags": ["-q"], "type": int, "default": 8, "help": "Number of quadrature points (default=8)"},
+    {
+        "flags": ["-q"],
+        "type": int,
+        "default": 8,
+        "help": "Number of quadrature points (default=8)",
+    },
     {"flags": ["-r"], "type": validator_01, "help": "Total reflection measurement"},
-    {"flags": ["-R"], "type": validator_01, "help": "Actual reflectance for 100%% measurement"},
-    {"flags": ["-S"], "type": int, "choices": [0, 1, 2], "help": "Number of spheres used"},
+    {
+        "flags": ["-R"],
+        "type": validator_01,
+        "help": "Actual reflectance for 100%% measurement",
+    },
+    {
+        "flags": ["-S"],
+        "type": int,
+        "choices": [0, 1, 2],
+        "help": "Number of spheres used",
+    },
     {"flags": ["-t"], "type": validator_01, "help": "Total transmission measurement"},
-    {"flags": ["-T"], "type": validator_01, "help": "Actual transmission for 100%% measurement"},
-    {"flags": ["-u"], "type": validator_01, "help": "Unscattered transmission measurement"},
-    {"flags": ["-v", "--version"], "action": 'version', 'version': "iadp " + iadpython.__version__, "help": "short version"},
+    {
+        "flags": ["-T"],
+        "type": validator_01,
+        "help": "Actual transmission for 100%% measurement",
+    },
+    {
+        "flags": ["-u"],
+        "type": validator_01,
+        "help": "Unscattered transmission measurement",
+    },
+    {
+        "flags": ["-v", "--version"],
+        "action": "version",
+        "version": "iadp " + iadpython.__version__,
+        "help": "short version",
+    },
     {"flags": ["-V"], "action": "store_true", "help": "long version"},
-    {"flags": ["--verbosity"], "type": int, "choices": [0, 1, 2], "help": "Verbosity level"},
+    {
+        "flags": ["--verbosity"],
+        "type": int,
+        "choices": [0, 1, 2],
+        "help": "Verbosity level",
+    },
     {"flags": ["-x"], "type": int, "help": "Set debugging level"},
     {"flags": ["-X"], "action": "store_true", "help": "Dual beam configuration"},
     {"flags": ["-z"], "action": "store_true", "help": "Do forward calculation"},
-    {"flags": ["filename"], "nargs": "?", "type": str, "default": None, "help": "Input filename"}
+    {
+        "flags": ["filename"],
+        "nargs": "?",
+        "type": str,
+        "default": None,
+        "help": "Input filename",
+    },
 ]
+
 
 def print_long_version():
     """Print the version information and quit."""
-    s = ''
+    s = ""
     s += "    version: " + iadpython.__version__ + "\n"
     s += "    Author: " + iadpython.__author__ + "\n"
     s += "    Copyright: " + iadpython.__copyright__ + "\n"
@@ -198,7 +339,7 @@ def print_long_version():
 
 def example_text():
     """return a string with some command-line examples."""
-    s = ''
+    s = ""
     s += "Examples:\n"
     s += "  iad file.rxt              Results will be put in file.txt\n"
     s += "  iad file                  Same as above\n"
@@ -209,6 +350,7 @@ def example_text():
     s += "  iad -o out file.rxt       Calculated values in out\n"
     s += "  iad -r 0.3                R_total=0.\n"
     return s
+
 
 def add_sample_constraints(exp, args):
     """Command-line constraints on sample."""
@@ -232,20 +374,22 @@ def add_sample_constraints(exp, args):
 
     if args.G is not None:
         if args.nslide is None:
-            raise argparse.ArgumentTypeError('Commandline: Cannot use -G without also specifing slide index with -N')
+            raise argparse.ArgumentTypeError(
+                "Commandline: Cannot use -G without also specifing slide index with -N"
+            )
         if args.G == 0:
             exp.sample.n_above = 1
             exp.sample.n_below = 1
-        elif args.G == 't':
+        elif args.G == "t":
             exp.sample.n_above = args.nslide
             exp.sample.n_below = 1
-        elif args.G == 'b':
+        elif args.G == "b":
             exp.sample.n_above = 1
             exp.sample.n_below = args.nslide
         elif args.G == 2:
             exp.sample.n_above = args.nslide
             exp.sample.n_below = args.nslide
-        elif args.G == 'n':
+        elif args.G == "n":
             exp.flip_sample = True
             exp.sample.n_above = args.nslide
             exp.sample.n_below = 1
@@ -256,15 +400,22 @@ def add_sample_constraints(exp, args):
 
     if args.i is not None:
         if abs(args.i) > 90:
-            raise argparse.ArgumentTypeError('Commandline: Bad argument to -i, value must be between -90 and 90')
+            raise argparse.ArgumentTypeError(
+                "Commandline: Bad argument to -i, value must be between -90 and 90"
+            )
         exp.sample.nu_0 = np.cos(np.radians(args.i))
 
     if args.q is not None:
         if args.q % 4:
-            raise argparse.ArgumentTypeError('Commandline: Number of quadrature points must be a multiple of 4')
-        if exp.sample.nu_0 !=1 and args.q % 12:
-            raise argparse.ArgumentTypeError('Commandline: Quadrature must be 12, 24, 36,... for oblique incidence')
+            raise argparse.ArgumentTypeError(
+                "Commandline: Number of quadrature points must be a multiple of 4"
+            )
+        if exp.sample.nu_0 != 1 and args.q % 12:
+            raise argparse.ArgumentTypeError(
+                "Commandline: Quadrature must be 12, 24, 36,... for oblique incidence"
+            )
         exp.sample.quad_pts = args.q
+
 
 def add_experiment_constraints(exp, args):
     """Command-line constraints on experiment."""
@@ -288,6 +439,7 @@ def add_experiment_constraints(exp, args):
 
     if args.u is not None:
         exp.m_u = args.u
+
 
 def add_analysis_constraints(exp, args):
     """Add command line constraints on analysis."""
@@ -321,6 +473,7 @@ def add_analysis_constraints(exp, args):
         # photons
         pass
 
+
 def forward_calculation(exp):
     """Do a forward calculation."""
     # set albedo
@@ -337,16 +490,16 @@ def forward_calculation(exp):
     # set optical thickness
     if exp.default_b is None:
         if exp.sample.d is None:
-            exp.sample.b = float('inf')
+            exp.sample.b = float("inf")
         elif exp.sample.a == 0:
             if exp.default_mua is None:
-                exp.sample.b = float('inf')
+                exp.sample.b = float("inf")
             else:
                 exp.sample.b = exp.default_mua * exp.sample.d
         elif exp.default_mus is None:
-            exp.sample.b = float('inf')
+            exp.sample.b = float("inf")
         else:
-            exp.sample.b = exp.default_mus/exp.sample.a * exp.sample.d
+            exp.sample.b = exp.default_mus / exp.sample.a * exp.sample.d
     else:
         exp.sample.b = exp.default_b
 
@@ -369,15 +522,17 @@ def forward_calculation(exp):
     print("   T unscattered   = %.3f" % tu)
     sys.exit(0)
 
+
 def redirect_output(args):
     """Redirect output as needed."""
     if args.out_fname is None:
         root, ext = os.path.splitext(args.filename)
         if ext == ".rxt":
-            args.out_fname = root + '.txt'
+            args.out_fname = root + ".txt"
         else:
-            args.out_fname = args.filename + '.txt'
-    sys.stdout = open(args.out_fname, 'w')
+            args.out_fname = args.filename + ".txt"
+    sys.stdout = open(args.out_fname, "w")
+
 
 def invert_file(exp, args):
     """Process an entire .rxt file."""
@@ -393,11 +548,14 @@ def invert_file(exp, args):
     sys.stdout = sys.__stdout__
     sys.exit(0)
 
+
 def main():
     """Main command-line interface."""
-    parser = argparse.ArgumentParser(description='iad command line program',
-                                     formatter_class=argparse.RawTextHelpFormatter,
-                                     epilog=example_text())
+    parser = argparse.ArgumentParser(
+        description="iad command line program",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=example_text(),
+    )
     for spec in arg_specs:
         flags = spec["flags"]
         other_args = {k: v for k, v in spec.items() if k != "flags"}
@@ -428,7 +586,9 @@ def main():
 
         print(exp)
         if (exp.m_r is None) and (exp.m_t is None) and (exp.m_u is None):
-            raise argparse.ArgumentTypeError("Commandline: One measurement needed or use '-z' for forward calc.")
+            raise argparse.ArgumentTypeError(
+                "Commandline: One measurement needed or use '-z' for forward calc."
+            )
 
         # invert parameters specified on the commandline
         a, b, g = exp.invert_rt()
@@ -440,6 +600,7 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

@@ -32,22 +32,22 @@ An example::
     >>> print('  total reflection = %.5f' % uru)
     >>> print('  total transmission = %.5f' % utu)
 """
-__version__ = '0.5.3'
-__author__ = 'Scott Prahl'
-__email__ = 'scott.prahl@oit.edu'
-__copyright__ = '2018-24, Scott Prahl'
-__license__ = 'MIT'
-__url__ = 'https://github.com/scottprahl/iadpython'
+__version__ = "0.5.3"
+__author__ = "Scott Prahl"
+__email__ = "scott.prahl@oit.edu"
+__copyright__ = "2018-24, Scott Prahl"
+__license__ = "MIT"
+__url__ = "https://github.com/scottprahl/iadpython"
 
+from .ad import *
+from .combine import *
 from .constants import *
 from .fresnel import *
-from .start import *
-from .ad import *
-from .quadrature import *
-from .combine import *
-from .redistribution import *
-from .sphere import *
-from .nist import *
-from .iad import *
 from .grid import *
+from .iad import *
+from .nist import *
+from .quadrature import *
+from .redistribution import *
 from .rxt import *
+from .sphere import *
+from .start import *

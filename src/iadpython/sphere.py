@@ -16,7 +16,7 @@ Example::
 import numpy as np
 
 
-class Sphere():
+class Sphere:
     """Container class for an integrating sphere.
 
     Attributes:
@@ -36,8 +36,16 @@ class Sphere():
 
     """
 
-    def __init__(self, d_sphere, d_sample, d_entrance=0,
-                 d_detector=0, r_detector=0, r_wall=0.99, r_std=0.99):
+    def __init__(
+        self,
+        d_sphere,
+        d_sample,
+        d_entrance=0,
+        d_detector=0,
+        r_detector=0,
+        r_wall=0.99,
+        r_std=0.99,
+    ):
         """Object initialization."""
         self._d_sphere = d_sphere
         self._d_sample = d_sample
@@ -67,10 +75,10 @@ class Sphere():
 
     def relative_cap_area(self, d_port):
         """Calculate relative area of spherical cap."""
-#        R = self.d_sphere/2
-#        r = d_port/2
-#        h = R - np.sqrt(R**2-r**2)
-#        return 2*np.pi*R*h / (4*np.pi*R**2)
+        #        R = self.d_sphere/2
+        #        r = d_port/2
+        #        h = R - np.sqrt(R**2-r**2)
+        #        return 2*np.pi*R*h / (4*np.pi*R**2)
         h = (self.d_sphere - np.sqrt(self.d_sphere**2 - d_port**2)) / 2
         return h / self.d_sphere
 
@@ -125,11 +133,11 @@ class Sphere():
 
         tmp = self.a_detector * self.r_detector + self.a_sample * URU
         tmp = r_wall * (self._a_wall + (1 - self.a_entrance) * tmp)
-#         if tmp == 1.0:
-#             G = np.inf
-#         else:
-#             G = 1.0 + tmp / (1.0 - tmp)
-#        print(URU, 1 - stmp)
+        #         if tmp == 1.0:
+        #             G = np.inf
+        #         else:
+        #             G = 1.0 + tmp / (1.0 - tmp)
+        #        print(URU, 1 - stmp)
         return 1 - tmp
 
     def multiplier(self, UR1=None, URU=None, r_wall=None):
@@ -204,7 +212,9 @@ class Sphere():
     @d_sample.setter
     def d_sample(self, value):
         """When size is changed ratios become invalid."""
-        assert 0 <= value <= self._d_sphere, "sample port must be between 0 and sphere diameter"
+        assert (
+            0 <= value <= self._d_sphere
+        ), "sample port must be between 0 and sphere diameter"
         self._d_sample = value
         self.a_sample = self.relative_cap_area(value)
         self._a_wall = 1 - self.a_sample - self.a_entrance - self.a_detector
@@ -217,7 +227,9 @@ class Sphere():
     @d_entrance.setter
     def d_entrance(self, value):
         """When size is changed ratios become invalid."""
-        assert 0 <= value <= self._d_sphere, "entrance port must be between 0 and sphere diameter"
+        assert (
+            0 <= value <= self._d_sphere
+        ), "entrance port must be between 0 and sphere diameter"
         self._d_entrance = value
         self.a_entrance = self.relative_cap_area(value)
         self._a_wall = 1 - self.a_sample - self.a_entrance - self.a_detector
@@ -230,7 +242,9 @@ class Sphere():
     @d_detector.setter
     def d_detector(self, value):
         """When size is changed ratios become invalid."""
-        assert 0 <= value <= self._d_sphere, "detector port must be between 0 and sphere diameter"
+        assert (
+            0 <= value <= self._d_sphere
+        ), "detector port must be between 0 and sphere diameter"
         self._d_detector = value
         self.a_detector = self.relative_cap_area(value)
         self._a_wall = 1 - self.a_sample - self.a_entrance - self.a_detector
@@ -265,7 +279,9 @@ class Sphere():
         if np.isscalar(value):
             assert 0 <= value <= 1, "Reflectivity of standard must be between 0 and 1"
         else:
-            assert 0 <= value.all() <= 1, "Reflectivity of standard must be between 0 and 1"
+            assert (
+                0 <= value.all() <= 1
+            ), "Reflectivity of standard must be between 0 and 1"
         self._r_std = value
         self.gain_std = self.multiplier(self.r_std, self.r_std)
 
@@ -280,7 +296,9 @@ class Sphere():
         if np.isscalar(value):
             assert 0 <= value <= 1, "Reflectivity of standard must be between 0 and 1"
         else:
-            assert 0 <= value.all() <= 1, "Reflectivity of standard must be between 0 and 1"
+            assert (
+                0 <= value.all() <= 1
+            ), "Reflectivity of standard must be between 0 and 1"
         self._r_wall = value
 
 
@@ -388,6 +406,7 @@ def Two_Sphere_T(RS, TS, UR1, URU, UT1, UTU, f=0):
     G22 = Gain_11(RS, TS, URU, UTU)
 
     x = TS.a_detector * (1 - TS.a_entrance) * TS.r_wall * G22
-    x *= (1 - f) * UT1 + (1 - RS.a_entrance) * RS.r_wall * \
-        RS.a_sample * UTU * (f * RS.r_wall + (1 - f) * UR1) * G
+    x *= (1 - f) * UT1 + (1 - RS.a_entrance) * RS.r_wall * RS.a_sample * UTU * (
+        f * RS.r_wall + (1 - f) * UR1
+    ) * G
     return x
